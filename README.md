@@ -6,7 +6,7 @@
 |软件环境         |   版本 | 
 | :----          |  :---- |
 | Visual Studio Enterprise  | 16.9.4 |
-| Keil MDK       | V5.29.0.0 |
+| Keil MDK       | 5.29.0.0 |
 | Altium Designer| 18.1.7 |
 | .NET FrameWork | 4.7.2 |
 | Prism.Wpf      | 8.1.97 |
@@ -26,7 +26,16 @@
 | ListBox | MaterialDesignChoiceChipPrimaryOutlineListBox | 是 |
 | Button | MaterialDesignOutlinedLightButton | 是 |
 
-##  C#命名规范 V1.0  
+##  程序设计规范 V1.0  
+### 1. 视图模型类设计原则
+- 各层之间交互关系如下:视图=>视图模型=>模型=>服务，视图模型层不直接使用服务层方法获取数据，模型层负责将服务层方法获取的数据  
+  进行初步加工并交由视图模型层调用。 
+- 对于程序错误只在程序中(即为Snackbar)提示出现错误，错误详细信息则记录在日志文件中，即视图模型层调用SnackbarMessageQueue
+  完成错误提示，服务层调用LogService完成日志记录。  
+- 服务层实现类都暴露公共的返回值为布尔类型的方法，方法参数中可以指定是否需要返回外部类型参数(使用out关键字).
+
+
+##  命名规范 V1.0  
 1.字段、变量采用小驼峰法，属性、类名、方法名采用大驼峰法。  
 2.只含有属性定义的简单类型，使用结构体表示，并以Kind结尾。  
 3.枚举类型以Part结尾。  
