@@ -14,11 +14,11 @@ namespace TAS.Models
         /// <summary>
         /// 主机请求位:主机写1,从机写0
         /// </summary>
-        MasterRequestBit,
+        MasterRequest,
 
         /// <summary>
         /// 从机应答位:从机写1,主机写0
         /// </summary>
-        SlaveResponseBit
+        SlaveResponse
     }
 }

@@ -6,47 +6,48 @@ using System.Text;
 using System.Threading.Tasks;
 using Prism.Ioc;
 using Prism.Mvvm;
-using Microsoft.Practices.EnterpriseLibrary.Validation;
-using Microsoft.Practices.EnterpriseLibrary.Validation.Validators;
 using TAS.Models;
 using TAS.Services;
 
 namespace TAS.Models
 {
-    public class ShellWindowModel:BindableBase
+    public class ShellWindowModel : BindableBase
     {
-        ObservableCollection<MenuKind> menuKinds;
-        public ObservableCollection<MenuKind> MenuKinds
+        IDataBaseController dataBaseController;
+
+        string sqlString;
+        List<NestKind> menuDataHub;
+
+        ObservableCollection<NestKind> menuKinds;
+        public ObservableCollection<NestKind> MenuKinds
         {
             get => menuKinds;
             set => SetProperty(ref menuKinds, value);
         }
 
-        MenuKind currentMenuKind;
-        public MenuKind CurrentMenuKind
+        NestKind currentMenuKind;
+        public NestKind CurrentMenuKind
         {
             get => currentMenuKind;
             set => SetProperty(ref currentMenuKind, value);
         }
 
-        IContainerProvider containerProvider;
-        IDataBaseController dataBaseController;
-
-        string queryText;
-
         public ShellWindowModel(IContainerProvider containerProviderArgs)
         {
-            containerProvider = containerProviderArgs;
             dataBaseController = containerProviderArgs.Resolve<IDataBaseController>();
         }
 
         public void LoadMenuData()
         {
-            queryText = "SELECT MenuCode,MenuName FROM MenuKind";
+            sqlString = "SELECT Code,Name,Content,Description,SubCode,SubName,Rank,Flag FROM System_MenuSetting";
+            dataBaseController.Query<NestKind>(sqlString, out menuDataHub);
 
-            List<MenuKind> outMenuKinds = new List<MenuKind>();
-            if (dataBaseController.Query<MenuKind>(queryText, out outMenuKinds))
-                MenuKinds = new ObservableCollection<MenuKind>(outMenuKinds);
+            var menus = from menuHub in menuDataHub
+                        where menuHub.Flag && menuHub.SubCode == "01"
+                        orderby menuHub.Rank
+                        select menuHub;
+
+            MenuKinds = new ObservableCollection<NestKind>(menus.ToList());
         }
     }
 }

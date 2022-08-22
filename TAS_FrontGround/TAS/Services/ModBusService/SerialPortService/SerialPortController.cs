@@ -8,6 +8,7 @@ using Microsoft.Practices.EnterpriseLibrary.Validation;
 using Microsoft.Practices.EnterpriseLibrary.Validation.Validators;
 using Prism.Ioc;
 using Modbus.Data;
+using Modbus.IO;
 using Modbus.Device;
 using Modbus.Utility;
 using TAS.Models;
@@ -19,13 +20,13 @@ namespace TAS.Services
         SerialPort serialPort;
         ModbusSerialMaster  modbusSerialMaster;
         ILogController logController;
-        IContainerProvider containerProvider;
 
         public string PortName { get; set; }
         public int BaudRate { get; set; }
         public int DataBits { get; set; }
         public Parity Parity { get; set; }
         public StopBits StopBits { get; set; }
+        public bool IsRtu { get; set; }
         public bool IsOpen => serialPort.IsOpen;
 
         public List<string> GetSerialPortName()
@@ -35,8 +36,9 @@ namespace TAS.Services
 
         public SerialPortController(IContainerProvider containerProviderArgs)
         {
-            containerProvider = containerProviderArgs;
             serialPort = new SerialPort();
+            
+            logController = containerProviderArgs.Resolve<ILogController>();
         }
 
         public void Initialize()
@@ -47,8 +49,10 @@ namespace TAS.Services
             serialPort.Parity = Parity;
             serialPort.StopBits = StopBits;
 
-            logController = containerProvider.Resolve<ILogController>();
-            modbusSerialMaster = ModbusSerialMaster.CreateRtu(serialPort);
+            if (IsRtu)
+                modbusSerialMaster = ModbusSerialMaster.CreateRtu(serialPort);
+            else
+                modbusSerialMaster = ModbusSerialMaster.CreateAscii(serialPort);
         }
 
         public void Open()

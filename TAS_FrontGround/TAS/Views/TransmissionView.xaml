@@ -6,6 +6,7 @@
              xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
              xmlns:local="clr-namespace:TAS.Views"
              xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:materialDesignConverters="clr-namespace:MaterialDesignThemes.Wpf.Converters;assembly=MaterialDesignThemes.Wpf"
              xmlns:prism="http://prismlibrary.com/"
              xmlns:model="clr-namespace:TAS.Models"
              mc:Ignorable="d" 
@@ -13,6 +14,7 @@
              d:DesignHeight="450" d:DesignWidth="800">
     <UserControl.Resources>
         <model:ConnectionContentConverter x:Key="ConnectionContentConverter"/>
+        <model:ConnectionToEnabledConverter x:Key="ConnectionToEnabledConverter"/>
     </UserControl.Resources>
 
     <i:Interaction.Triggers>
@@ -30,7 +32,15 @@
         <GroupBox Grid.Column="0"
                   Header="ModBus设置">
             <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
@@ -42,85 +52,166 @@
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
-                <StackPanel Grid.Row="0"
-                            Orientation="Horizontal">
-                    <TextBlock Text="连接类型"
-                               Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0" 
-                              ItemsSource="{Binding TransmissionModel.ConnectionKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="Content"
-                              SelectedValue="{Binding TransmissionModel.CurrentConnectionKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
-                
-                <StackPanel Grid.Row="1"
-                            Orientation="Horizontal">
-                    <TextBlock Text="选择串口" 
-                               Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0" 
+                <TextBlock Grid.Row="0"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="连接类型"
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="0"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.ConnectionKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentConnectionKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+
+                <TextBlock Grid.Row="1"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="模式类型" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="1"
+                          Grid.Column="1"
+                          Margin="8 0 0 0"
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.ModeKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentModeKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+
+                <Separator Grid.Row="2"
+                           Grid.ColumnSpan="2"
+                           Style="{DynamicResource MaterialDesignSeparator}"/>
+
+                <TextBlock Grid.Row="3"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           VerticalAlignment="Center"
+                           Text="选择串口" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <StackPanel Orientation="Horizontal"
+                            Grid.Row="3"
+                            Grid.Column="1"
+                            Margin="8 0 0 0">
+                    <ComboBox Width="100"
+                              HorizontalAlignment="Left"
+                              HorizontalContentAlignment="Center"
                               ItemsSource="{Binding TransmissionModel.SerialPortNameKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                              SelectedValue="{Binding TransmissionModel.CurrentSerialPortNameKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                              SelectedValue="{Binding TransmissionModel.CurrentSerialPortNameKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                              IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
                     <Button Margin="8 0 0 0"
                             Style="{DynamicResource MaterialDesignToolForegroundButton}"
                             Foreground="{DynamicResource PrimaryHueLightBrush}"
                             Content="{materialDesign:PackIcon SerialPort}"
                             ToolTip="搜索串口"
-                            Command="{Binding SearchSerialPortCommand}"/>
+                            Command="{Binding SearchSerialPortCommand}"
+                            IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
                 </StackPanel>
 
-                <StackPanel Grid.Row="2"
-                    Orientation="Horizontal">
-                    <TextBlock Text="波特率" 
-                       Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0"
-                              ItemsSource="{Binding TransmissionModel.BaudRateKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                              DisplayMemberPath="Content"
-                              SelectedValue="{Binding TransmissionModel.CurrentBaudRateKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
+                <TextBlock Grid.Row="4"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="波特率" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="4"
+                          Grid.Column="1"
+                          Margin="8 0 0 0"
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.BaudRateKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentBaudRateKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Row="3"
-                    Orientation="Horizontal">
-                    <TextBlock Text="数据位" 
-                       Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0" 
-                      ItemsSource="{Binding TransmissionModel.DataBitKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                      DisplayMemberPath="Content"
-                      SelectedValue="{Binding TransmissionModel.CurrentDataBitKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                </StackPanel>
+                <TextBlock Grid.Row="5"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="数据位" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="5"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.DataBitKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentDataBitKind,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Row="4"
-                    Orientation="Horizontal">
-                    <TextBlock Text="停止位" 
-                       Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0" 
-                      ItemsSource="{Binding TransmissionModel.StopBitsKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                      DisplayMemberPath="Content"
-                      SelectedValue="{Binding TransmissionModel.CurrentStopBitsKind}"/>
-                </StackPanel>
+                <TextBlock Grid.Row="6"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="停止位" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="6"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.StopBitsKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentStopBitsKind}"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Row="5"
-                    Orientation="Horizontal">
-                    <TextBlock Text="检验位" 
-                       Style="{DynamicResource MaterialDesignTextBlock}"/>
-                    <ComboBox Margin="8 0 0 0" 
-                      ItemsSource="{Binding TransmissionModel.ParityKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
-                      DisplayMemberPath="Content"
-                      SelectedValue="{Binding TransmissionModel.CurrentParityKind}"/>
-                </StackPanel>
+                <TextBlock Grid.Row="7"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="检验位" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <ComboBox Grid.Row="7"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          ItemsSource="{Binding TransmissionModel.ParityKinds,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"
+                          DisplayMemberPath="Content"
+                          SelectedValue="{Binding TransmissionModel.CurrentParityKind}"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged}"/>
 
-                <StackPanel Grid.Row="6"
-                            Orientation="Horizontal">
-                    <materialDesign:PackIcon Kind="Connection" 
-                                             Width="24" 
-                                             Height="24"
-                                             VerticalAlignment="Center"
-                                             HorizontalAlignment="Center"
-                                             Foreground="{DynamicResource PrimaryHueLightBrush}"/>
-                    <Button Margin="8 0 0 0"
-                            Style="{DynamicResource MaterialDesignOutlinedLightButton}"
-                            Content="{Binding TransmissionModel.IsOpen, Mode=OneWay, Converter={StaticResource ConnectionContentConverter}}"
-                            Command="{Binding ConnectionCommand}">
-                    </Button>
-                </StackPanel>
+                <Separator Grid.Row="8"
+                           Grid.ColumnSpan="2"
+                           Style="{DynamicResource MaterialDesignSeparator}"/>
+
+                <TextBlock Grid.Row="9"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="IP地址" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <TextBox Grid.Row="9"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ConnectionToEnabledConverter}}"/>
+
+                <TextBlock Grid.Row="10"
+                           Grid.Column="0"
+                           HorizontalAlignment="Right"
+                           Text="端口号" 
+                           Style="{DynamicResource MaterialDesignTextBlock}"/>
+                <TextBox Grid.Row="10"
+                          Grid.Column="1"
+                          Margin="8 0 0 0" 
+                          Width="100"
+                          HorizontalAlignment="Left"
+                          HorizontalContentAlignment="Center"
+                          IsEnabled="{Binding TransmissionModel.IsSerialPortSelected,Mode=OneWay,UpdateSourceTrigger=PropertyChanged, Converter={StaticResource ConnectionToEnabledConverter}}"/>
+
+                <Button Grid.Row="11"
+                        Grid.ColumnSpan="2"
+                        Margin="0 8 0 0"
+                        Width="170"
+                        Style="{DynamicResource  MaterialDesignFlatLightBgButton}"
+                        Content="{Binding TransmissionModel.IsOpen, Mode=OneWay, Converter={StaticResource ConnectionContentConverter}}"
+                        Command="{Binding ConnectionCommand}"/>
             </Grid>
         </GroupBox>
 
@@ -143,49 +234,32 @@
                                 Orientation="Horizontal">
                         <TextBlock Margin="8 0 0 0"
                                    Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
+                                   Text="从机时间"/>
+                        <TextBlock Margin="4 0 0 0"
+                                   Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
                                    Text="{Binding TransmissionModel.SlaveDateTime,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
-                        <TextBlock Margin="32 0 0 0"
+                        <TextBlock Margin="16 0 0 0"
+                                   Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
+                                   Text="从机温度"/>
+                        <TextBlock Margin="8 0 0 0"
                                    Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
                                    Text="{Binding TransmissionModel.SlaveTemperature,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
+                        <TextBlock Margin="4 0 0 0"
+                                   Style="{DynamicResource MaterialDesignHeadline5TextBlock}"
+                                   Text="℃"/>
                     </StackPanel>
 
                     <StackPanel Grid.Row="1"
                                 Orientation="Horizontal">
                         <StackPanel Margin="8 0 0 0">
-                            <TextBlock Text="Block 0-15"/>
-                            <ProgressBar Margin="0 8 0 0"
-                                         Orientation="Vertical"
-                                         Width="100"
-                                         Value="50"/>
-                        </StackPanel>
-                        <StackPanel Margin="8 0 0 0">
-                            <TextBlock Text="Block 16-31"/>
+                            <TextBlock Text="从机数据采集进度"/>
                             <ProgressBar Margin="0 8 0 0"
                                      Orientation="Vertical"
-                                     Width="100"
-                                     Value="50"/>
-                        </StackPanel>
-                        <StackPanel Margin="8 0 0 0">
-                            <TextBlock Text="Block 32-47"/>
-                            <ProgressBar Margin="0 8 0 0"
-                                     Orientation="Vertical"
-                                     Width="100"
-                                     Value="50"/>
-                        </StackPanel>
-                        <StackPanel Margin="8 0 0 0">
-                            <TextBlock Text="Block 48-63"/>
-                            <ProgressBar Margin="0 8 0 0"
-                                     Orientation="Vertical"
-                                     Width="100"
-                                     Value="50"/>
-                        </StackPanel>
-                        <StackPanel Margin="8 0 0 0">
-                            <TextBlock Text="Block ALL"/>
-                            <ProgressBar Margin="0 8 0 0"
-                                     Orientation="Vertical"
+                                     materialDesign:TransitionAssist.DisableTransitions="True"
+                                     Maximum="100"
                                      Width="100"
                                      Height="10"
-                                     Value="50"/>
+                                     Value="{Binding TransmissionModel.SlaveFetchValue,Mode=TwoWay,UpdateSourceTrigger=PropertyChanged}"/>
                         </StackPanel>
                     </StackPanel>
 

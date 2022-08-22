@@ -58,7 +58,8 @@ namespace TAS.ViewModels
 
         private void OnFetchSlaveData()
         {
-            
+            if (TransmissionModel.FetchSlaveData())
+                messageQueue.Enqueue("获取从机数据成功!");
         }
 
         private void OnFetchSlaveInfo()

@@ -19,7 +19,7 @@ namespace TAS.Services
         byte slaveID;
 
         ushort masterRequestCoilAddress, slaveResponseCoilAddress;
-        ushort masterCommandRegisterAddress, timerRegisterAddress, temperatureRegisterAddress, frequencyRegisterAddress;
+        ushort masterCommandRegisterAddress, timerRegisterAddress, temperatureRegisterAddress, pageStutasRegisterAddress, frequencyRegisterAddress;
 
         int retryCount, currentRetryCount;
         TimeSpan retryIntervalTimeSpan;
@@ -57,6 +57,10 @@ namespace TAS.Services
             dataBaseController.ExecuteScalar(sqlString, out retDataBaseObj);
             temperatureRegisterAddress = Convert.ToUInt16(retDataBaseObj);
 
+            sqlString = "SELECT Content FROM TAS_DictionarySetting WHERE CategoryCode = '09' AND Name = 'SLV_PSTAT'";
+            dataBaseController.ExecuteScalar(sqlString, out retDataBaseObj);
+            pageStutasRegisterAddress = Convert.ToUInt16(retDataBaseObj);
+
             sqlString = "SELECT Content FROM TAS_DictionarySetting WHERE CategoryCode = '09' AND Name = 'MA_FRQ'";
             dataBaseController.ExecuteScalar(sqlString, out retDataBaseObj);
             frequencyRegisterAddress = Convert.ToUInt16(retDataBaseObj);
@@ -66,10 +70,10 @@ namespace TAS.Services
         {
             switch (statusWordPartArgs)
             {
-                case StatusWordPart.MasterRequestBit:
+                case StatusWordPart.MasterRequest:
                     serialPortController.WriteSingleCoil(slaveID, masterRequestCoilAddress, true);
                     break;
-                case StatusWordPart.SlaveResponseBit:
+                case StatusWordPart.SlaveResponse:
                     serialPortController.WriteSingleCoil(slaveID, slaveResponseCoilAddress, false);
                     break;
             }
@@ -79,14 +83,11 @@ namespace TAS.Services
         {
             switch (commandWordPartArgs)
             {
-                case CommandWordPart.ReadDateTime:
+                case CommandWordPart.ReadInfo:
                     serialPortController.WriteSingleRegister(slaveID, masterCommandRegisterAddress, 1);
                     break;
-                case CommandWordPart.ReadTemperature:
-                    serialPortController.WriteSingleRegister(slaveID, masterCommandRegisterAddress, 2);
-                    break;
                 case CommandWordPart.ReadData:
-                    serialPortController.WriteSingleRegister(slaveID, masterCommandRegisterAddress, 3);
+                    serialPortController.WriteSingleRegister(slaveID, masterCommandRegisterAddress, 2);
                     break;
                 case CommandWordPart.WriteDateTime:
                     serialPortController.WriteSingleRegister(slaveID, masterCommandRegisterAddress, 11);
@@ -103,7 +104,7 @@ namespace TAS.Services
 
             switch (dataWordPartArgs)
             {
-                case DataWordPart.DateTime:
+                case DataWordPart.Timer:
                     {
                         if (isWriteArgs)
                             serialPortController.WriteMultipleRegisters(slaveID, timerRegisterAddress, writeValueArgs);
@@ -116,7 +117,15 @@ namespace TAS.Services
                         if (isWriteArgs)
                             serialPortController.WriteMultipleRegisters(slaveID, temperatureRegisterAddress, writeValueArgs);
                         else
-                            readValueArgs = serialPortController.ReadHoldingRegisters(slaveID, temperatureRegisterAddress, 2);
+                            readValueArgs = serialPortController.ReadHoldingRegisters(slaveID, temperatureRegisterAddress, 1);
+                        break;
+                    }
+                case DataWordPart.PageStutas:
+                    {
+                        if (isWriteArgs)
+                            serialPortController.WriteMultipleRegisters(slaveID, pageStutasRegisterAddress, writeValueArgs);
+                        else
+                            readValueArgs = serialPortController.ReadHoldingRegisters(slaveID, pageStutasRegisterAddress, 1);
                         break;
                     }
                 case DataWordPart.Frequency:

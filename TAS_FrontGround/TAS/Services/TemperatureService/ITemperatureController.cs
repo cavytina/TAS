@@ -10,8 +10,11 @@ namespace TAS.Services
     public interface ITemperatureController
     {
         void Initialize();
-        bool ReadSlaveDateTime(out ushort[] slaveDateTimeArgs);
-        bool WriteSlaveDateTime(ushort[] slaveDateTimeArgs);
-        bool ReadSlaveTemperature(out ushort[] slaveTemperatureArgs);
+
+        bool ReadSlaveInfoSequence(out ushort[] slaveInfoArgs);
+        bool ReadSlaveDataSequence(out ushort[] slaveDataArgs);
+
+        bool WriteSlaveDateTimeSequence(ushort[] slaveDateTimeArgs);
+        bool WriteSlaveFrequencySequence(ushort[] slaveFrequencyArgs);
     }
 }

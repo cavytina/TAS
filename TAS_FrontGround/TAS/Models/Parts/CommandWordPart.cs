@@ -12,17 +12,12 @@ namespace TAS.Models
     public enum CommandWordPart
     {
         /// <summary>
-        /// 读从机时间 Hex:0x01
+        /// 读从机信息 Hex:0x01
         /// </summary>
-        ReadDateTime,
+        ReadInfo,
 
         /// <summary>
-        /// 读从机温度 Hex:0x02
-        /// </summary>
-        ReadTemperature,
-
-        /// <summary>
-        /// 读从机数据 Hex:0x03
+        /// 读从机数据 Hex:0x02
         /// </summary>
         ReadData,
 
@@ -32,7 +27,7 @@ namespace TAS.Models
         WriteDateTime,
 
         /// <summary>
-        /// 写从机读温度频率 Hex:0x12
+        /// 写从机温度频率 Hex:0x12
         /// </summary>
         WriteFrequency
     }

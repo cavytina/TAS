@@ -17,6 +17,8 @@ namespace TAS.Services
         Parity Parity { get; set; }
         StopBits StopBits { get; set; }
 
+        bool IsRtu { get; set; }
+
         void Initialize();
 
         void Open();

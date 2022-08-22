@@ -37,6 +37,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="ChnCharInfo, Version=1.0.0.0, Culture=neutral, PublicKeyToken=18f031bd02e5e291, processorArchitecture=MSIL">
+      <HintPath>packages\ChnCharInfo.1.0.0\lib\net\ChnCharInfo.dll</HintPath>
+    </Reference>
     <Reference Include="Dapper, Version=2.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>packages\Dapper.2.0.123\lib\net461\Dapper.dll</HintPath>
     </Reference>
@@ -74,6 +77,9 @@
     </Reference>
     <Reference Include="Prism.Wpf, Version=8.1.97.5141, Culture=neutral, PublicKeyToken=40ee6c3a2184dc59, processorArchitecture=MSIL">
       <HintPath>packages\Prism.Wpf.8.1.97\lib\net47\Prism.Wpf.dll</HintPath>
+    </Reference>
+    <Reference Include="SimplifiedChinesePinYinConversion, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>packages\SimplifiedChinesePinYinConversion.1.0.0\lib\net46\SimplifiedChinesePinYinConversion.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -116,13 +122,17 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Models\ConnectionContentConverter.cs" />
-    <Compile Include="Models\Kinds\BaseKind.cs" />
+    <Compile Include="Models\Converters\ConnectionContentConverter.cs" />
+    <Compile Include="Models\Converters\ConnectionToEnabledConverter.cs" />
+    <Compile Include="Models\Kinds\BaseKind\BaseKind.cs" />
+    <Compile Include="Models\Kinds\BaseKind\IBaseKind.cs" />
+    <Compile Include="Models\Kinds\CategoryKind\ICategoryKind.cs" />
+    <Compile Include="Models\Kinds\NestKind\INestKind.cs" />
+    <Compile Include="Models\Kinds\TemperatureKind\ITemperatureKind.cs" />
+    <Compile Include="Models\Kinds\TemperatureKind\TemperatureKind.cs" />
     <Compile Include="Models\Parts\DataWordPart.cs" />
-    <Compile Include="Models\Parts\DictionaryDataPart.cs" />
-    <Compile Include="Models\Kinds\MenuKind.cs" />
-    <Compile Include="Models\Kinds\NestKind.cs" />
-    <Compile Include="Models\Kinds\CategoryKind.cs" />
+    <Compile Include="Models\Kinds\NestKind\NestKind.cs" />
+    <Compile Include="Models\Kinds\CategoryKind\CategoryKind.cs" />
     <Compile Include="Models\Parts\ApplictionServicePart.cs" />
     <Compile Include="Models\Parts\CommandWordPart.cs" />
     <Compile Include="Models\Parts\StatusWordPart.cs" />

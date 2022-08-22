@@ -8,8 +8,6 @@ using Prism.Mvvm;
 using Prism.Commands;
 using Prism.Regions;
 using MaterialDesignThemes.Wpf;
-using Microsoft.Practices.EnterpriseLibrary.Validation;
-using Microsoft.Practices.EnterpriseLibrary.Validation.Validators;
 using TAS.Models;
 using TAS.Views;
 using TAS.Services;
@@ -34,9 +32,9 @@ namespace TAS.ViewModels
 
         IContainerProvider containerProvider;
         IRegionManager regionManager;
-        IApplictionController applictionController;
 
         public DelegateCommand WindowLoadedCommand { get; private set; }
+        public DelegateCommand MenuItemChangedCommand { get; private set; }
 
         public ShellWindowViewModel(IContainerProvider containerProviderArgs)
         {
@@ -44,14 +42,34 @@ namespace TAS.ViewModels
             regionManager = containerProvider.Resolve<IRegionManager>();
             MessageQueue = containerProvider.Resolve<ISnackbarMessageQueue>();
             WindowLoadedCommand = new DelegateCommand(OnWindowLoaded);
+            MenuItemChangedCommand = new DelegateCommand(OnMenuItemChanged);
+        }
+
+        private void OnMenuItemChanged()
+        {
+            string currentMenuCode = ShellWindowModel.CurrentMenuKind.Code;
+
+            switch (currentMenuCode)
+            {
+                case "0101":
+                    regionManager.RequestNavigate("ContentRegion", "Transmission");
+                    break;
+                case "0102":
+                    regionManager.RequestNavigate("ContentRegion", "Query");
+                    break;
+                case "0103":
+                    regionManager.RequestNavigate("ContentRegion", "Setup");
+                    break;
+                default:
+                    regionManager.RequestNavigate("ContentRegion", "Transmission");
+                    break;
+            }
         }
 
         private void OnWindowLoaded()
         {
             ShellWindowModel = new ShellWindowModel(containerProvider);
-
             ShellWindowModel.LoadMenuData();
-
             regionManager.RegisterViewWithRegion("ContentRegion", typeof(TransmissionView));
         }
     }

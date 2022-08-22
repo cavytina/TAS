@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Globalization;
+using System.ComponentModel;
 using System.IO.Ports;
 using Prism.Ioc;
 using Prism.Mvvm;
 using TAS.Services;
-using System.Diagnostics;
+
 
 namespace TAS.Models
 {
@@ -18,6 +21,7 @@ namespace TAS.Models
         IDataBaseController dataBaseController;
         ISerialPortController serialPortController;
         ITemperatureController temperatureController;
+        ILogController logController;
 
         string sqlString;
         List<CategoryKind> dictionaryDataHub;
@@ -34,7 +38,15 @@ namespace TAS.Models
         public CategoryKind CurrentConnectionKind
         {
             get => currentConnectionKind;
-            set => SetProperty(ref currentConnectionKind, value);
+            set
+            {
+                SetProperty(ref currentConnectionKind, value);
+
+                if (value.Content == "SerialPort")
+                    IsSerialPortSelected = true;
+                else
+                    IsSerialPortSelected = false;
+            }
         }
 
         ObservableCollection<string> serialPortNameKinds;
@@ -49,6 +61,20 @@ namespace TAS.Models
         {
             get => currentSerialPortNameKind;
             set => SetProperty(ref currentSerialPortNameKind, value);
+        }
+
+        ObservableCollection<CategoryKind> modeKinds;
+        public ObservableCollection<CategoryKind> ModeKinds
+        {
+            get => modeKinds;
+            set => SetProperty(ref modeKinds, value);
+        }
+
+        CategoryKind currentModeKind;
+        public CategoryKind CurrentModeKind
+        {
+            get => currentModeKind;
+            set => SetProperty(ref currentModeKind, value);
         }
 
         ObservableCollection<CategoryKind> baudRateKinds;
@@ -114,6 +140,13 @@ namespace TAS.Models
             set => SetProperty(ref isOpen, value);
         }
 
+        bool isSerialPortSelected;
+        public bool IsSerialPortSelected
+        {
+            get => isSerialPortSelected;
+            set => SetProperty(ref isSerialPortSelected, value);
+        }
+
         string slaveDateTime;
         public string SlaveDateTime
         {
@@ -128,9 +161,17 @@ namespace TAS.Models
             set => SetProperty(ref slaveTemperature, value);
         }
 
+        double slaveFetchValue;
+        public double SlaveFetchValue
+        {
+            get => slaveFetchValue;
+            set => SetProperty(ref slaveFetchValue, value);
+        }
+
         public TransmissionModel(IContainerProvider containerProviderArgs)
         {
             containerProvider = containerProviderArgs;
+            logController = containerProviderArgs.Resolve<ILogController>();
         }
 
         public void LoadData()
@@ -139,10 +180,14 @@ namespace TAS.Models
             SearchSerialPort();
 
             LoadConnectionData();
+            LoadModeData();
             LoadBaudRateData();
             LoadDataBitData();
             LoadStopBitsData();
             LoadParityData();
+
+            SlaveDateTime = "0000-00-00 00:00:00";
+            SlaveTemperature = "0";
         }
 
         internal void LoadDataBaseData()
@@ -158,82 +203,97 @@ namespace TAS.Models
 
         internal void LoadConnectionData()
         {
-            IOrderedEnumerable<CategoryKind> connetions = from connectionHub in dictionaryDataHub
-                                                          where connectionHub.Flag == true && connectionHub.CategoryCode == "01"
-                                                          orderby connectionHub.Rank
-                                                          select connectionHub;
+            var connetions = from connectionHub in dictionaryDataHub
+                             where connectionHub.Flag == true && connectionHub.CategoryCode == "01"
+                             orderby connectionHub.Rank
+                             select connectionHub;
             ConnectionKinds = new ObservableCollection<CategoryKind>(connetions.ToList());
 
-            IEnumerable<BaseKind> defaultConnetion = from defaultConnetionHub in defaultDataHub
-                                                     where defaultConnetionHub.Flag == true && defaultConnetionHub.Code == "01"
-                                                     select defaultConnetionHub;
+            var defaultConnetion = from defaultConnetionHub in defaultDataHub
+                                   where defaultConnetionHub.Flag == true && defaultConnetionHub.Code == "01"
+                                   select defaultConnetionHub;
             CurrentConnectionKind = ConnectionKinds.FirstOrDefault(x => x.Content == defaultConnetion.FirstOrDefault().Content);
         }
+
+        internal void LoadModeData()
+        {
+            var modes = from modeHub in dictionaryDataHub
+                        where modeHub.Flag && modeHub.CategoryCode == "02"
+                        orderby modeHub.Rank
+                        select modeHub;
+            ModeKinds = new ObservableCollection<CategoryKind>(modes.ToList());
+
+            var defaultMode = from defaultModeHub in defaultDataHub
+                              where defaultModeHub.Flag && defaultModeHub.Code == "02"
+                              select defaultModeHub;
+            CurrentModeKind = ModeKinds.FirstOrDefault(x => x.Content == defaultMode.FirstOrDefault().Content);
+        }
+
 
         public void SearchSerialPort()
         {
             serialPortController = containerProvider.Resolve<ISerialPortController>();
             SerialPortNameKinds = new ObservableCollection<string>(serialPortController.GetSerialPortName());
 
-            IEnumerable<BaseKind> defaultSerialPort = from defaultSerialPortHub in defaultDataHub
-                                                      where defaultSerialPortHub.Flag == true && defaultSerialPortHub.Code == "02"
-                                                      select defaultSerialPortHub;
-            CurrentSerialPortNameKind = SerialPortNameKinds.FirstOrDefault(x => x == defaultSerialPort.FirstOrDefault().Content);
+            var defaultSerialPortName = from defaultSerialPortNameHub in defaultDataHub
+                                        where defaultSerialPortNameHub.Flag && defaultSerialPortNameHub.Code == "03"
+                                        select defaultSerialPortNameHub;
+            CurrentSerialPortNameKind = SerialPortNameKinds.FirstOrDefault(x => x == defaultSerialPortName.FirstOrDefault().Content);
         }
 
         internal void LoadBaudRateData()
         {
-            IOrderedEnumerable<CategoryKind> baudRates = from baudRateHub in dictionaryDataHub
-                                                         where baudRateHub.Flag == true && baudRateHub.CategoryCode == "03"
-                                                         orderby baudRateHub.Rank
-                                                         select baudRateHub;
+            var baudRates = from baudRateHub in dictionaryDataHub
+                            where baudRateHub.Flag && baudRateHub.CategoryCode == "03"
+                            orderby baudRateHub.Rank
+                            select baudRateHub;
             BaudRateKinds = new ObservableCollection<CategoryKind>(baudRates.ToList());
 
-            IEnumerable<BaseKind> defaultBaudRate = from defaultBaudRateHub in defaultDataHub
-                                                    where defaultBaudRateHub.Flag == true && defaultBaudRateHub.Code == "03"
-                                                    select defaultBaudRateHub;
+            var defaultBaudRate = from defaultBaudRateHub in defaultDataHub
+                                  where defaultBaudRateHub.Flag && defaultBaudRateHub.Code == "04"
+                                  select defaultBaudRateHub;
             CurrentBaudRateKind = BaudRateKinds.FirstOrDefault(x => x.Content == defaultBaudRate.FirstOrDefault().Content);
         }
 
         internal void LoadDataBitData()
         {
-            IOrderedEnumerable<CategoryKind> dataBits = from dataBitHub in dictionaryDataHub
-                                                        where dataBitHub.Flag == true && dataBitHub.CategoryCode == "04"
-                                                        orderby dataBitHub.Rank
-                                                        select dataBitHub;
+            var dataBits = from dataBitHub in dictionaryDataHub
+                           where dataBitHub.Flag && dataBitHub.CategoryCode == "04"
+                           orderby dataBitHub.Rank
+                           select dataBitHub;
             DataBitKinds = new ObservableCollection<CategoryKind>(dataBits.ToList());
 
-            IEnumerable<BaseKind> defaultDataBit = from defaultDataBitHub in defaultDataHub
-                                                   where defaultDataBitHub.Flag == true && defaultDataBitHub.Code == "04"
-                                                   select defaultDataBitHub;
+            var defaultDataBit = from defaultDataBitHub in defaultDataHub
+                                 where defaultDataBitHub.Flag && defaultDataBitHub.Code == "05"
+                                 select defaultDataBitHub;
             CurrentDataBitKind = DataBitKinds.FirstOrDefault(x => x.Content == defaultDataBit.FirstOrDefault().Content);
         }
 
         internal void LoadStopBitsData()
         {
-            IOrderedEnumerable<CategoryKind> stopBits = from stopBitsHub in dictionaryDataHub
-                                                        where stopBitsHub.Flag == true && stopBitsHub.CategoryCode == "05"
-                                                        orderby stopBitsHub.Rank
-                                                        select stopBitsHub;
+            var stopBits = from stopBitsHub in dictionaryDataHub
+                           where stopBitsHub.Flag && stopBitsHub.CategoryCode == "05"
+                           orderby stopBitsHub.Rank
+                           select stopBitsHub;
             StopBitsKinds = new ObservableCollection<CategoryKind>(stopBits.ToList());
 
-            IEnumerable<BaseKind> defaultStopBits = from defaultStopBitsHub in defaultDataHub
-                                                    where defaultStopBitsHub.Flag == true && defaultStopBitsHub.Code == "05"
-                                                    select defaultStopBitsHub;
+            var defaultStopBits = from defaultStopBitsHub in defaultDataHub
+                                  where defaultStopBitsHub.Flag && defaultStopBitsHub.Code == "06"
+                                  select defaultStopBitsHub;
             CurrentStopBitsKind = StopBitsKinds.FirstOrDefault(x => x.Content == defaultStopBits.FirstOrDefault().Content);
         }
 
         internal void LoadParityData()
         {
-            IOrderedEnumerable<CategoryKind> paritys = from parityHub in dictionaryDataHub
-                                                       where parityHub.Flag == true && parityHub.CategoryCode == "06"
-                                                       orderby parityHub.Rank
-                                                       select parityHub;
+            var paritys = from parityHub in dictionaryDataHub
+                          where parityHub.Flag == true && parityHub.CategoryCode == "06"
+                          orderby parityHub.Rank
+                          select parityHub;
             ParityKinds = new ObservableCollection<CategoryKind>(paritys.ToList());
 
-            IEnumerable<BaseKind> defaultParity = from defaultParityHub in defaultDataHub
-                                                  where defaultParityHub.Flag == true && defaultParityHub.Code == "06"
-                                                  select defaultParityHub;
+            var defaultParity = from defaultParityHub in defaultDataHub
+                                where defaultParityHub.Flag == true && defaultParityHub.Code == "07"
+                                select defaultParityHub;
             CurrentParityKind = ParityKinds.FirstOrDefault(x => x.Content == defaultParity.FirstOrDefault().Content);
         }
 
@@ -244,6 +304,7 @@ namespace TAS.Models
             serialPortController.DataBits = int.Parse(CurrentDataBitKind.Content);
             serialPortController.StopBits = (StopBits)Enum.Parse(typeof(StopBits), CurrentStopBitsKind.Name);
             serialPortController.Parity = (Parity)Enum.Parse(typeof(Parity), CurrentParityKind.Name);
+            serialPortController.IsRtu = CurrentModeKind.Content == "RTU";
 
             if (IsOpen == false)
             {
@@ -270,43 +331,34 @@ namespace TAS.Models
             sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentConnectionKind.Content + "' WHERE Code = '01'";
             dataBaseController.Execute(sqlString);
 
-            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentSerialPortNameKind + "' WHERE Code = '02'";
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentModeKind.Content + "' WHERE Code = '02'";
             dataBaseController.Execute(sqlString);
 
-            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentBaudRateKind.Content + "' WHERE Code = '03'";
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentSerialPortNameKind + "' WHERE Code = '03'";
             dataBaseController.Execute(sqlString);
 
-            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentDataBitKind.Content + "' WHERE Code = '04'";
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentBaudRateKind.Content + "' WHERE Code = '04'";
             dataBaseController.Execute(sqlString);
 
-            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentStopBitsKind.Content + "' WHERE Code = '05'";
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentDataBitKind.Content + "' WHERE Code = '05'";
             dataBaseController.Execute(sqlString);
 
-            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentParityKind.Content + "' WHERE Code = '06'";
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentStopBitsKind.Content + "' WHERE Code = '06'";
+            dataBaseController.Execute(sqlString);
+
+            sqlString = "UPDATE TAS_DefaultSetting SET Content = '" + CurrentParityKind.Content + "' WHERE Code = '07'";
             dataBaseController.Execute(sqlString);
         }
 
         public bool FetchSlaveInfo()
         {
             bool ret = false;
+            TemperatureKind temperatureKind;
 
-            if (FetchSlaveDataTime())
-                if (FetchSlaveTemperature())
-                    ret = true;
-
-            return ret;
-        }
-
-        internal bool FetchSlaveDataTime()
-        {
-            bool ret = false;
-
-            ushort[] slaveDateTime;
-            if (temperatureController.ReadSlaveDateTime(out slaveDateTime))
+            if (ConvertSlaveInfo(out temperatureKind))
             {
-                SlaveDateTime = "20" + slaveDateTime[5].ToString() + "-" + slaveDateTime[4].ToString().PadLeft(2,'0') + "-" + slaveDateTime[3].ToString() +
-                    " " +
-                    slaveDateTime[2].ToString() + ":" + slaveDateTime[1].ToString() + ":" + slaveDateTime[0].ToString();
+                SlaveDateTime = temperatureKind.SlaveCurrentDataTime.ToString("G");
+                SlaveTemperature = temperatureKind.SlaveCurrentTemperature.ToString();
 
                 ret = true;
             }
@@ -314,27 +366,97 @@ namespace TAS.Models
             return ret;
         }
 
-        internal bool FetchSlaveTemperature()
+        public bool FetchSlaveData()
         {
             bool ret = false;
+            TemperatureKind temperatureKind = default;
+            temperatureKind.SlaveCurrentPageStatus = 0x7FFF;
 
-            ushort[] slaveTemperatureArgs;
-            if (temperatureController.ReadSlaveTemperature(out slaveTemperatureArgs))
+            while (CalculateHighBitsAmount(temperatureKind.SlaveCurrentPageStatus) != 0)
             {
-                ushort slaveTemperature = slaveTemperatureArgs[0];
+                ConvertSlaveData(out temperatureKind);
+                int slaveCurrentPageStatusHighBitsAmount = CalculateHighBitsAmount(temperatureKind.SlaveCurrentPageStatus);
+                SlaveFetchValue = slaveCurrentPageStatusHighBitsAmount / 15.0 * 100;
+            }
+
+            ret = true;
+
+            return ret;
+        }
+
+        internal int CalculateHighBitsAmount(ushort slavePageStatusBitsArgs)
+        {
+            BitArray slavePageStatusBits = new BitArray(BitConverter.GetBytes(slavePageStatusBitsArgs));
+            bool[] slavePageStatusBooleans = new bool[slavePageStatusBits.Length];
+
+            slavePageStatusBits.CopyTo(slavePageStatusBooleans, 0);
+            return slavePageStatusBooleans.Count(x => x == true);
+        }
+
+        internal bool ConvertSlaveInfo(out TemperatureKind temperatureKindArgs)
+        {
+            bool ret = false;
+            temperatureKindArgs = default;
+
+            ushort[] slaveInfo;
+            if (temperatureController.ReadSlaveInfoSequence(out slaveInfo))
+            {
+                string slaveDateTime = "20" + slaveInfo[5].ToString() + "-" + slaveInfo[4].ToString().PadLeft(2, '0') + "-" + slaveInfo[3].ToString().PadLeft(2, '0') +
+                    " " + slaveInfo[2].ToString() + ":" + slaveInfo[1].ToString() + ":" + slaveInfo[0].ToString();
+
+                temperatureKindArgs.SlaveCurrentDataTime = DateTime.Parse(slaveDateTime);
+
+                ushort slaveTemperature = slaveInfo[6];
                 ushort slaveTemperatureValue;
 
                 byte slaveTemperatureSignBit = (byte)(slaveTemperature >> 15);
                 if (Convert.ToBoolean(slaveTemperatureSignBit))
                 {
                     ushort slaveTemperatureTurnValue = (ushort)((ushort)~slaveTemperature + 0x01);
-                    SlaveTemperature = "-" + (slaveTemperatureTurnValue * 0.0625).ToString() + "℃";
+                    temperatureKindArgs.SlaveCurrentTemperature = -Convert.ToSingle(slaveTemperatureTurnValue * 0.0625);
                 }
                 else
                 {
                     slaveTemperatureValue = slaveTemperature;
-                    SlaveTemperature = (slaveTemperatureValue * 0.0625).ToString() + "℃";
+                    temperatureKindArgs.SlaveCurrentTemperature = Convert.ToSingle(slaveTemperatureValue * 0.0625);
                 }
+
+                ret = true;
+            }
+
+            return ret;
+        }
+
+        internal bool ConvertSlaveData(out TemperatureKind temperatureKindArgs)
+        {
+            bool ret = false;
+            temperatureKindArgs = default;
+
+            ushort[] slaveData;
+            if (temperatureController.ReadSlaveDataSequence(out slaveData))
+            {
+                string slaveDateTime = "20" + slaveData[5].ToString() + "-" + slaveData[4].ToString().PadLeft(2, '0') + "-" + slaveData[3].ToString().PadLeft(2, '0') +
+                    " " + slaveData[2].ToString() + ":" + slaveData[1].ToString() + ":" + slaveData[0].ToString();
+
+                temperatureKindArgs.SlaveCurrentDataTime = DateTime.Parse(slaveDateTime);
+
+                ushort slaveTemperature = slaveData[6];
+                ushort slaveTemperatureValue;
+
+                byte slaveTemperatureSignBit = (byte)(slaveTemperature >> 15);
+                if (Convert.ToBoolean(slaveTemperatureSignBit))
+                {
+                    ushort slaveTemperatureTurnValue = (ushort)((ushort)~slaveTemperature + 0x01);
+                    temperatureKindArgs.SlaveCurrentTemperature = -Convert.ToSingle(slaveTemperatureTurnValue * 0.0625);
+                }
+                else
+                {
+                    slaveTemperatureValue = slaveTemperature;
+                    temperatureKindArgs.SlaveCurrentTemperature = Convert.ToSingle(slaveTemperatureValue * 0.0625);
+                }
+
+                ushort slavePageStatus= slaveData[7];
+                temperatureKindArgs.SlaveCurrentPageStatus = slavePageStatus;
 
                 ret = true;
             }
@@ -364,7 +486,7 @@ namespace TAS.Models
                 Convert.ToUInt16(DateTime.Now.Year - 2000)
             };
 
-            if (temperatureController.WriteSlaveDateTime(currentDateTime))
+            if (temperatureController.WriteSlaveDateTimeSequence(currentDateTime))
                 ret = true;
 
             return ret;

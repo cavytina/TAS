@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace TAS.Models
 {
-    public class CategoryKind : BaseKind
+    public interface INestKind : IBaseKind
     {
-        public string CategoryCode { get; set; }
-        public string CategoryName { get; set; }
+        string SubCode { get; set; }
+        string SubName { get; set; }
     }
 }

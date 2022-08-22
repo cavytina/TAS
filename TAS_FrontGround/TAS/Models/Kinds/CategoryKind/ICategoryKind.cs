@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace TAS.Models
 {
-    public enum DataWordPart
+    public interface ICategoryKind : IBaseKind
     {
-        Timer,
-        Temperature,
-        PageStutas,
-        Frequency
+        string CategoryCode { get; set; }
+        string CategoryName { get; set; }
     }
 }
